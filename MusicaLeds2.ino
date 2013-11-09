@@ -1,15 +1,23 @@
 
-int branco = 13;
-int verde = 6;
-int vermelho = 9;
+int branco = 6;
+int verde = 4;
+int vermelho = 5;
+int cores[] = {branco.verde.vermelho};
 
-int botaoBranco = 2;
-int botaoVerde = 0;
-int botaoVermelho = 1;
+int buzz = 9;
+
+int botaoBranco = 8;
+int botaoVerde = 2;
+int botaoVermelho = 7;
 
 int estadoBranco = HIGH;
 int estadoVerde = HIGH;
 int estadoVermelho = HIGH;
+
+int buzzBranco = 250;
+int buzzVerde = 340;
+int buzzVermelho = 500;
+int buzzes[] = {buzzBranco,buzzVerde,buzzVermelho};
 
 int delayLeds = 200;
 
@@ -17,15 +25,17 @@ int level = 0;
 int ultimoLevel = 0;
 int musica[100];
 
-void setup() {                
+void setup() {
   pinMode(vermelho, OUTPUT);
-  pinMode(verde, OUTPUT);   
-  pinMode(branco, OUTPUT); 
+  pinMode(verde, OUTPUT);
+  pinMode(branco, OUTPUT);
   
-  /*pinMode(botaoBranco, INPUT);
+  pinMode(botaoBranco, INPUT);
   pinMode(botaoVerde, INPUT);
-  pinMode(botaoVermelho, INPUT); 
-  */
+  pinMode(botaoVermelho, INPUT);
+  
+  pinMode(buzz, OUTPUT);
+
 }
 
 void acendeLed(int porta) {
@@ -33,6 +43,13 @@ void acendeLed(int porta) {
   delay(delayLeds);
   digitalWrite(porta, LOW);
   delay(delayLeds);
+}
+
+void acendeLedTime(int porta, int tempo) {
+  digitalWrite(porta, HIGH);
+  delay(tempo);
+  digitalWrite(porta, LOW);
+  delay(tempo);
 }
 
 void musicaRandomica(){
@@ -46,9 +63,9 @@ void tocaMusica(){
   int i;
   for (i=0; i < level; i++){
     int nota = musica[i];
-    if (nota == 0) acendeLed(branco);
-    else if (nota == 1) acendeLed(vermelho);
-    else if (nota == 2) acendeLed(verde);
+    tone(buzz,buzzes[nota]);
+    acendeLed(cores[nota]);
+    noTone(buzz);
   }
 }
 
@@ -60,36 +77,61 @@ void toca(int numeroNotas){
 }
 
 void pegaEstadoBotoes() {
-  estadoBranco = analogRead(botaoBranco);
-  estadoVerde = analogRead(botaoVerde);
-  estadoVermelho = analogRead(botaoVermelho);
+  estadoBranco = digitalRead(botaoBranco);
+  estadoVerde = digitalRead(botaoVerde);
+  estadoVermelho = digitalRead(botaoVermelho);
 }
 
 boolean acertou(int teclasCorretas) {
-  return (teclasCorretas == level);  
+  return (teclasCorretas == level);
 }
 
 int verificarBotoesPressionadosPeloUsuarioNoMomento(){
   while (true){
     pegaEstadoBotoes();
-    if (estadoBranco > 500){
+    if (estadoBranco == HIGH){
+      tone(buzz, buzzBranco);
       acendeLed(branco);
-      return 0;    
+      noTone(buzz);
+      return 0;
     }
-    if (estadoVermelho > 500){
+    if (estadoVermelho == HIGH){
+      tone(buzz, buzzVermelho);
       acendeLed(vermelho);
+      noTone(buzz);
       return 1;
     }
-    if (estadoVerde > 500){
+    if (estadoVerde == HIGH){
+      tone(buzz, buzzVerde);
       acendeLed(verde);
+      noTone(buzz);
       return 2;
     }
   }
 }
 
+void endGame() {
+  for (int i = 0; i < 5; i++) {
+      tone(buzz, buzzVerde);
+    acendeLedTime(verde, 80);
+      noTone(buzz);
+      tone(buzz, buzzVermelho);
+    acendeLedTime(vermelho, 80);
+      noTone(buzz);
+      tone(buzz, buzzBranco);
+    acendeLedTime(branco, 80);
+      noTone(buzz);
+      tone(buzz, buzzVermelho);
+    acendeLedTime(vermelho, 80);
+      noTone(buzz);
+  }
+}
+
 void loop() {
   int i = 0;
+  randomSeed(analogRead(0));
   while(true){
+    delay(1000);
     toca(++i);
     int teclasCorretas = 0;
     while (!acertou(teclasCorretas)) {
@@ -98,12 +140,11 @@ void loop() {
         teclasCorretas++;
       }
       else{
-        acendeLed(verde);
-        acendeLed(verde);
-        acendeLed(verde);
-        while(true);
+        endGame();
+        delay(5000);
       }
     }
+    
   }
 
 }
